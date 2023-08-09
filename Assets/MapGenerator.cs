@@ -13,7 +13,7 @@ public class MapGenerator : MonoBehaviour
     public DrawMode drawMode;
 
     [Header("Level of Detail Settings")]
-    const int mapChunkSize = 241; // this is the w. So our map size is in fact 241x241, replacing mapWidth and mapHeight
+    public const int mapChunkSize = 241; // this is the w. So our map size is in fact 241x241, replacing mapWidth and mapHeight
     [Range(0, 6)]
     public int levelOfDetail; // used to set i to 1, 2, 4, 6, 8, 10 or 12
     private int NumberOfSteps
