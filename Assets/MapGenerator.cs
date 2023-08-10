@@ -1,6 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
+using System.Threading;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -39,6 +40,9 @@ public class MapGenerator : MonoBehaviour
 
     public TerrainType[] regions;
 
+    private Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
+    private Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
+
     public void DrawMapInEditor()
     {
         MapData mapData = GenerateMapData();
@@ -55,6 +59,67 @@ public class MapGenerator : MonoBehaviour
         else if (drawMode == DrawMode.Mesh)
         {
             display.DrawMesh(MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, NumberOfSteps), TextureGenerator.TextureFromColorMap(mapData.colorMap, mapChunkSize, mapChunkSize));
+        }
+    }
+
+    public void RequestMapData(Action<MapData> actionCallback)
+    {
+        ThreadStart threadStart = delegate
+        {
+            MapDataThread(actionCallback);
+        };
+
+        new Thread(threadStart).Start();
+    }
+
+    private void MapDataThread(Action<MapData> action)
+    {
+        MapData mapData = GenerateMapData();
+        lock (mapDataThreadInfoQueue)
+        {
+            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(action, mapData));
+        }
+    }
+
+    public void RequestMeshData(MapData mapData, Action<MeshData> actionCallback)
+    {
+        ThreadStart threadStart = delegate
+        {
+            MeshDataThread(mapData, actionCallback);
+        };
+
+        new Thread(threadStart).Start();
+    }
+
+    private void MeshDataThread(MapData mapData, Action<MeshData> actionCallback)
+    {
+        MeshData meshData = MeshGenerator.GenerateTerrainMesh(mapData.heightMap, meshHeightMultiplier, NumberOfSteps);
+        lock (meshDataThreadInfoQueue)
+        {
+            meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(actionCallback, meshData));
+        }
+    }
+
+    private void Update()
+    {
+        while (mapDataThreadInfoQueue.Count > 0)
+        {
+            MapThreadInfo<MapData> result = default;
+            lock (mapDataThreadInfoQueue)
+            {
+                result = mapDataThreadInfoQueue.Dequeue();
+            }
+            result.callback(result.parameter);
+        }
+
+        while (meshDataThreadInfoQueue.Count > 0)
+        {
+            MapThreadInfo<MeshData> result = default;
+            lock (meshDataThreadInfoQueue)
+            {
+                result = meshDataThreadInfoQueue.Dequeue();
+            }
+            result.callback(result.parameter);
         }
     }
 
@@ -89,6 +154,18 @@ public class MapGenerator : MonoBehaviour
         if (octaves < 0)
             octaves = 0;
     }
+
+    struct MapThreadInfo<T>
+    {
+        public readonly Action<T> callback;
+        public readonly T parameter;
+
+        public MapThreadInfo(Action<T> callback, T parameter)
+        {
+            this.callback = callback;
+            this.parameter = parameter;
+        }
+    }
 }
 
 [System.Serializable]
@@ -101,8 +178,8 @@ public struct TerrainType
 
 public struct MapData
 {
-    public float[,] heightMap;
-    public Color[] colorMap;
+    public readonly float[,] heightMap;
+    public readonly Color[] colorMap;
 
     public MapData(float[,] h, Color[] c)
     {

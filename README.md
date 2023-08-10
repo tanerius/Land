@@ -20,3 +20,7 @@ So the general formula for calculating the total number of vertices will be:
 `v = (w - 1) / i + 1`
   
 The Unity limit for the number of vertices per mesh is `v <= 255^2` or `65025` vertices. Because of this, the mesh width in a square mesh should be `w <= 255`. So a good width for a mesh is `w = 241`, since we said that  `i` must be a factor of `(w-1)`. This would give a value which will be divisible by 6 numbers. I.e. `i` can be `2, 4, 6, 8, 10 or 12`. We will from now on call `w` the **map chunk size**.
+
+## Threadding
+
+The MapData generator can be placed inside a thread, which is started with a callback parameter. But because we dont want that the callback is started from the non-main thread we will instead add the mapdata to a queue which will be checked in the main thread. The reason for this is because we can only work with textures and rendering in the main thread in unity.
