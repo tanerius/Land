@@ -2,6 +2,18 @@
 
 Procedural land generation.
 
+## Terminology
+
+- Octave - Perlin noise is made up of multiple noise maps called Octaves. The more octaves the more granularity and detail something is
+- Lacunarity - controls the increase of frequency in octaves
+  - If f0 - is the frequency of Octave 0 then f0 = lacunarity ^ 0
+  - f1 = lacunarity ^ 1
+  - fn = lacunarity ^ n
+- Persistence - controls the decrease in the alplitude of octaves
+  - If p0 is the persistence of octave 0 then p0 = persistence ^ 0
+  - p1 = persistence ^ 1
+  - pn = persistence ^ n
+
 ## LOD
 
 The basic assumption here and also easier to work with will be a MxM quadratic map. Therefore, hieght will be equal to width.  
