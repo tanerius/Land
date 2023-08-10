@@ -25,7 +25,7 @@ public class InfiniteTerrain : MonoBehaviour
     int visibleChunksInViewDistance;
 
     Dictionary<Vector2,TerrainChunk> spawnedChunksDict = new Dictionary<Vector2, TerrainChunk>();
-    List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
+    static List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
 
     private void Start()
     {
@@ -69,10 +69,6 @@ public class InfiniteTerrain : MonoBehaviour
                 if(spawnedChunksDict.ContainsKey(viewedChunkCoord)) 
                 {
                     spawnedChunksDict[viewedChunkCoord].UpdateTerrainChunk();
-                    if (spawnedChunksDict[viewedChunkCoord].IsVisible)
-                    {
-                        terrainChunksVisibleLastUpdate.Add(spawnedChunksDict[viewedChunkCoord]);
-                    }
                 }
                 else
                 {
@@ -173,6 +169,8 @@ public class InfiniteTerrain : MonoBehaviour
                         lodMesh.RequestMesh(mapData);
                     }
                 }
+
+                terrainChunksVisibleLastUpdate.Add(this);
             }
 
             SetVisible(visible);
