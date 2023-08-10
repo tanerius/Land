@@ -29,8 +29,8 @@ public class InfiniteTerrain : MonoBehaviour
 
     private void Start()
     {
-        maxViewDistance = detailLevels[detailLevels.Length - 1].visibleDistanceThreshold;
         mapGenerator = FindObjectOfType<MapGenerator>();
+        maxViewDistance = detailLevels[detailLevels.Length - 1].visibleDistanceThreshold;
         chunkSize = MapGenerator.mapChunkSize - 1;
         visibleChunksInViewDistance = Mathf.RoundToInt(maxViewDistance / chunkSize);
 
@@ -97,6 +97,7 @@ public class InfiniteTerrain : MonoBehaviour
 
         public TerrainChunk(Vector2 coordinate, int size, LODInfo[] d, Transform parent, Material material)
         {
+            mapDataReceived = false;
             detailLevelsArray = d;
             position = coordinate * size;
             bounds = new Bounds(position, Vector2.one * size);
@@ -113,14 +114,13 @@ public class InfiniteTerrain : MonoBehaviour
 
             meshesLODArray = new LODMesh[detailLevelsArray.Length];
 
-            for (int i = 0; i < meshesLODArray.Length; i++)
+            for (int i = 0; i < detailLevelsArray.Length; i++)
             {
                 meshesLODArray[i] = new LODMesh(detailLevelsArray[i].lod, UpdateTerrainChunk);
             }
 
-            mapGenerator.RequestMapData(OnMapDataReceived);
+            mapGenerator.RequestMapData(position, OnMapDataReceived);
         }
-
 
         /// <summary>
         /// Called when a map data generator thread exists returning a generated MapData object
@@ -130,13 +130,13 @@ public class InfiniteTerrain : MonoBehaviour
         {
             this.mapData = mapData;
             mapDataReceived = true;
+
+            Texture2D texture = TextureGenerator.TextureFromColorMap(mapData.colorMap, MapGenerator.mapChunkSize, MapGenerator.mapChunkSize);
+            meshRenderer.material.mainTexture = texture;
+
             UpdateTerrainChunk();
         }
 
-        private void OnMeshDataReceived(MeshData meshData)
-        {
-            meshFilter.mesh = meshData.CreateMesh();
-        }
 
         public void UpdateTerrainChunk()
         {
@@ -208,7 +208,7 @@ public class InfiniteTerrain : MonoBehaviour
         {
             mesh = meshData.CreateMesh();
             hasMesh = true;
-            updateCallback.Invoke();
+            updateCallback();
         }
 
         public void RequestMesh(MapData mapData)
