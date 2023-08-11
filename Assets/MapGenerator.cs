@@ -17,7 +17,7 @@ public class MapGenerator : MonoBehaviour
     public Noise.NormalizerMode normalizeMode;
 
     [Header("Level of Detail Settings")]
-    public const int mapChunkSize = 241; // this is the w. So our map size is in fact 241x241, replacing mapWidth and mapHeight
+    public const int mapChunkSize = 239; 
     [Range(0, 6)]
     public int levelOfDetail; // used to set i to 1, 2, 4, 6, 8, 10 or 12
     private int NumberOfSteps
@@ -141,7 +141,7 @@ public class MapGenerator : MonoBehaviour
 
     private MapData GenerateMapData(Vector2 center)
     {
-        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize, mapChunkSize, seed, noiseScale, octaves, persistence, lacunarity, center + offset, normalizeMode);
+        float[,] noiseMap = Noise.GenerateNoiseMap(mapChunkSize + 2, mapChunkSize + 2, seed, noiseScale, octaves, persistence, lacunarity, center + offset, normalizeMode);
         Color[] colorMap = new Color[mapChunkSize * mapChunkSize];
 
         for (int y = 0; y < mapChunkSize; y++)
