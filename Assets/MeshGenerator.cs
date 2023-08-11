@@ -65,6 +65,8 @@ public class MeshGenerator
             }
         }
 
+        meshData.BakeNormals();
+
         return meshData;
     }
 }
@@ -77,6 +79,7 @@ public class MeshData
 
     private Vector3[] borderVertices;
     private int[] borderTriangles;
+    private Vector3[] bakedNormals; // used to calculatye normals in a new thread instead of the main
 
     private int triangleIndex = 0;
     private int borderTriangleIndex;
@@ -191,7 +194,12 @@ public class MeshData
         mesh.uv = uvs;
         //mesh.RecalculateNormals();
         // Use our function to calculate normals
-        mesh.normals = CalculateNormals();
+        mesh.normals = bakedNormals;
         return mesh;
+    }
+
+    public void BakeNormals()
+    {
+        bakedNormals = CalculateNormals();
     }
 }

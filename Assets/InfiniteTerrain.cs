@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class InfiniteTerrain : MonoBehaviour
 {
-    const float scale = 1f;
+    const float scale = 2f;
     const float viewerMoveThresholdBeforeUpdate = 25f;
     const float sqrViewerMoveThresholdBeforeUpdate = viewerMoveThresholdBeforeUpdate * viewerMoveThresholdBeforeUpdate;
 
@@ -84,8 +85,10 @@ public class InfiniteTerrain : MonoBehaviour
         Bounds bounds; // used to find point on perimeter of the object
         private MeshRenderer meshRenderer;
         private MeshFilter meshFilter;
+        private MeshCollider meshCollider;
         LODInfo[] detailLevelsArray;
         LODMesh[] meshesLODArray;
+        LODMesh collisionLodMesh;
         MapData mapData;
         bool mapDataReceived;
         int previousLODindex = -1;
@@ -101,6 +104,7 @@ public class InfiniteTerrain : MonoBehaviour
             meshObject = new GameObject("Terrain Chunk");
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();
+            meshCollider = meshObject.AddComponent<MeshCollider>();
             meshRenderer.material = material;
 
             meshObject.transform.position = positionv3 * scale;
@@ -113,6 +117,10 @@ public class InfiniteTerrain : MonoBehaviour
             for (int i = 0; i < detailLevelsArray.Length; i++)
             {
                 meshesLODArray[i] = new LODMesh(detailLevelsArray[i].lod, UpdateTerrainChunk);
+                if (detailLevelsArray[i].useForCollider)
+                {
+                    collisionLodMesh = meshesLODArray[i];
+                }
             }
 
             mapGenerator.RequestMapData(position, OnMapDataReceived);
@@ -170,6 +178,18 @@ public class InfiniteTerrain : MonoBehaviour
                     }
                 }
 
+                if(lodIndex == 0)
+                {
+                    if(collisionLodMesh.hasMesh)
+                    {
+                        meshCollider.sharedMesh = collisionLodMesh.mesh;
+                    }
+                    else if(!collisionLodMesh.hasRequestedMesh)
+                    {
+                        collisionLodMesh.RequestMesh(mapData);
+                    }
+                }
+
                 terrainChunksVisibleLastUpdate.Add(this);
             }
 
@@ -221,5 +241,6 @@ public class InfiniteTerrain : MonoBehaviour
     {
         public int lod;
         public float visibleDistanceThreshold;
+        public bool useForCollider;
     }
 }
