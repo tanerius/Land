@@ -98,7 +98,7 @@ public class MeshData
         // now we calculate the surface normal from these points forming a triangle surface
         Vector3 sideAB = pointB - pointA;
         Vector3 sideAC = pointC - pointA;
-
+        // Get the perpendicular normal for the side
         return Vector3.Cross(sideAB, sideAC).normalized;
     }
 
